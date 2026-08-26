@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>智启 Markdown 转 Word</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #1f2933;
+        --muted: #52606d;
+        --line: #d9e2ec;
+        --bg: #f8f5ef;
+        --card: #fffdf8;
+        --accent: #8c2f39;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Songti SC", "Source Han Serif SC", "Noto Serif SC", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, #f3e6c8 0, transparent 28%),
+          var(--bg);
+        line-height: 1.65;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 48px 24px 72px;
+      }
+      h1 {
+        font-family: "Heiti SC", "PingFang SC", sans-serif;
+        font-size: 2rem;
+        margin: 0 0 8px;
+      }
+      .lede { color: var(--muted); margin-bottom: 28px; }
+      section {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 20px 22px;
+        margin-bottom: 16px;
+      }
+      h2 {
+        font-family: "Heiti SC", "PingFang SC", sans-serif;
+        font-size: 1.05rem;
+        margin: 0 0 12px;
+      }
+      .status { font-family: "PingFang SC", sans-serif; }
+      .ok { color: #0f7b3a; }
+      .bad { color: var(--accent); }
+      ul { margin: 0; padding-left: 1.2em; }
+      pre {
+        overflow: auto;
+        background: #1f2933;
+        color: #f8f5ef;
+        padding: 14px 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      a { color: var(--accent); }
+      .note { color: var(--muted); font-size: 0.95rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>智启 Markdown 转 Word</h1>
+      <p class="lede">把已确认的 Markdown 教案转成原生 Word 文档，供智启插件调用。本页只提供说明，不会在浏览器里保存或填写 API 密钥。</p>
+
+      <section>
+        <h2>健康检查</h2>
+        <p id="health" class="status">正在检查 /api/health …</p>
+      </section>
+
+      <section>
+        <h2>支持的 Markdown</h2>
+        <ul>
+          <li>H1 至 H6、段落、粗体、斜体、删除线、行内代码、超链接</li>
+          <li>有序/无序列表（最多三级嵌套）、引用、分隔线、围栏代码块</li>
+          <li>Markdown 表格转为 Word 原生表格</li>
+          <li>HTTPS 公网 PNG/JPEG/GIF/BMP 图片嵌入；SVG 第一版不支持</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>API 请求示例</h2>
+        <pre>POST /api/generate-docx
+Content-Type: application/json
+x-api-key: 仅在智启插件配置中填写，不要写进网页
+
+{
+  "markdown": "# 小学三年级数学跨学科教案\n\n完整教案内容……",
+  "filename": "小学三年级数学-乘除法的应用（二）-科学跨学科教案",
+  "document_title": "乘除法的应用（二）——溶解速度公平实验"
+}</pre>
+      </section>
+
+      <section>
+        <h2>返回示例</h2>
+        <pre>{
+  "code": 200,
+  "word_status": "success",
+  "word_url": "https://……/xxx.docx",
+  "word_filename": "小学三年级数学-乘除法的应用（二）-科学跨学科教案.docx",
+  "word_size_bytes": 123456,
+  "word_message": "",
+  "warnings_text": "",
+  "expires_at": ""
+}</pre>
+        <p class="note">失败时 <code>word_status</code> 为 <code>error</code>，<code>word_url</code> 必须是空字符串。</p>
+      </section>
+
+      <section>
+        <h2>安全说明</h2>
+        <ul>
+          <li>转换接口需要 <code>x-api-key</code>。密钥只配置在 Vercel 与智启插件中。</li>
+          <li>生成的 DOCX 存在 public Blob，拿到链接的人都可以下载，不要用于含敏感学生信息的文档。</li>
+          <li>只下载 HTTPS 图片，并拒绝内网、localhost 与云元数据地址。</li>
+          <li>不执行 Markdown 中的 HTML、JavaScript 或 CSS。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>源码</h2>
+        <p>GitHub 仓库：<a href="https://github.com/BonnyBing/zhiqi-markdown-docx">https://github.com/BonnyBing/zhiqi-markdown-docx</a></p>
+      </section>
+    </main>
+    <script>
+      fetch("/api/health")
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          var el = document.getElementById("health");
+          if (data && data.status === "ok") {
+            el.className = "status ok";
+            el.textContent =
+              data.service + " v" + data.version + " 正常。存储已配置：" +
+              (data.storage_configured ? "是" : "否");
+          } else {
+            el.className = "status bad";
+            el.textContent = "健康检查返回异常。";
+          }
+        })
+        .catch(function () {
+          var el = document.getElementById("health");
+          el.className = "status bad";
+          el.textContent = "无法访问 /api/health。本地请先运行 vercel dev。";
+        });
+    </script>
+  </body>
+</html>

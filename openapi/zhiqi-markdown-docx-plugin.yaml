@@ -1,0 +1,158 @@
+openapi: 3.0.3
+info:
+  title: 智启 Markdown 转 Word
+  description: |
+    将已确认的完整 Markdown 教案转换为原生 Word 文档。支持 Word 标题、列表、原生表格和公网图片嵌入，成功时返回真实 DOCX 下载链接。本工具不负责生成或改写教案内容，不得在转换失败时虚构下载链接。
+  version: 1.0.0
+servers:
+  - url: https://YOUR_PROJECT.vercel.app
+    description: 部署完成后把这里换成实际的 Vercel 域名
+tags:
+  - name: word
+    description: Markdown 转 DOCX
+paths:
+  /api/generate-docx:
+    post:
+      operationId: generateTeachingDocx
+      tags: [word]
+      summary: 将 Markdown 教案转换为 Word 文档
+      description: |
+        解析完整 Markdown，生成含原生标题、列表、表格和嵌入图片的 DOCX，
+        上传到 Vercel Blob 后返回 HTTPS 下载链接。
+        转换或上传失败时 word_status=error，且 word_url 必须为空字符串。
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateDocxRequest'
+            example:
+              markdown: "# 小学三年级数学跨学科教案\n\n完整教案内容……"
+              filename: 小学三年级数学-乘除法的应用（二）-科学跨学科教案
+              document_title: 乘除法的应用（二）——溶解速度公平实验
+      responses:
+        '200':
+          description: 转换成功，word_url 为可下载的 HTTPS 地址
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateDocxResponse'
+              example:
+                code: 200
+                word_status: success
+                word_url: https://xxx.public.blob.vercel-storage.com/docx/2026/08/uuid-教案.docx
+                word_filename: 小学三年级数学-乘除法的应用（二）-科学跨学科教案.docx
+                word_size_bytes: 123456
+                word_message: ''
+                warnings_text: ''
+                expires_at: ''
+        '400':
+          description: 请求不合法，例如 Markdown 为空或文件名无效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateDocxResponse'
+              example:
+                code: 400
+                word_status: error
+                word_url: ''
+                word_filename: ''
+                word_size_bytes: 0
+                word_message: markdown 不能为空。
+                warnings_text: ''
+                expires_at: ''
+        '401':
+          description: API 密钥缺失或错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateDocxResponse'
+              example:
+                code: 401
+                word_status: error
+                word_url: ''
+                word_filename: ''
+                word_size_bytes: 0
+                word_message: 缺少 x-api-key 请求头。
+                warnings_text: ''
+                expires_at: ''
+        '500':
+          description: 文档生成或 Blob 上传失败，此时不得返回下载链接
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateDocxResponse'
+              example:
+                code: 500
+                word_status: error
+                word_url: ''
+                word_filename: ''
+                word_size_bytes: 0
+                word_message: Word 文件已生成但上传失败，未提供下载链接。
+                warnings_text: ''
+                expires_at: ''
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: 在智启插件配置中填写的 DOCX_API_KEY
+  schemas:
+    GenerateDocxRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - markdown
+        - filename
+      properties:
+        markdown:
+          type: string
+          description: 已确认的完整 Markdown 教案正文。不要只传标题或摘要。最大约 120KB。
+        filename:
+          type: string
+          maxLength: 80
+          description: '下载文件名，不要包含 .docx 后缀；若包含也会被去掉后只追加一次。禁止 / \\ : * ? " < > | 和换行。'
+        document_title:
+          type: string
+          description: 可选。写入 Word 文档标题；若与正文第一级标题相同则不重复插入。
+    GenerateDocxResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - word_status
+        - word_url
+        - word_filename
+        - word_size_bytes
+        - word_message
+        - warnings_text
+        - expires_at
+      properties:
+        code:
+          type: integer
+          description: HTTP 状态码。成功为 200，失败为 400/401/413/500 等。
+        word_status:
+          type: string
+          enum: [success, error]
+          description: 只能是 success 或 error。任何非 200 结果都必须是 error。
+        word_url:
+          type: string
+          description: 成功时为 Vercel Blob 的 HTTPS 下载地址；失败时必须为空字符串，禁止占位链接。
+        word_filename:
+          type: string
+          description: 成功时为清洗后的 .docx 文件名；失败时为空字符串。
+        word_size_bytes:
+          type: integer
+          description: 成功时为 DOCX 字节数；失败时为 0。
+        word_message:
+          type: string
+          description: 失败原因。成功时为空字符串。
+        warnings_text:
+          type: string
+          description: 非致命告警，例如图片未能嵌入、HTML 被忽略。多项用中文分号分隔。
+        expires_at:
+          type: string
+          description: 仅当服务端确实启用了定时清理时返回 ISO 过期时间；否则为空字符串，不得填写虚假时间。
