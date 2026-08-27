@@ -1,0 +1,10 @@
+api/*.js
+src/**/*.js
+.env
+.env.local
+.env*.local
+node_modules
+tests/output
+.vercel
+.vercel-docx-api-key.txt
+.vercel-cron-secret.txt

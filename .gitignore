@@ -12,4 +12,4 @@ dist/
 .vercel-docx-api-key.txt
 .vercel-cron-secret.txt
 api/*.js
-.env*
+src/**/*.js

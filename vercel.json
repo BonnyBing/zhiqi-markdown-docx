@@ -4,19 +4,10 @@
     "api/generate-docx.ts": {
       "maxDuration": 60
     },
-    "api/generate-docx.js": {
-      "maxDuration": 60
-    },
     "api/cleanup-docx.ts": {
       "maxDuration": 60
     },
-    "api/cleanup-docx.js": {
-      "maxDuration": 60
-    },
     "api/health.ts": {
-      "maxDuration": 10
-    },
-    "api/health.js": {
       "maxDuration": 10
     }
   },
