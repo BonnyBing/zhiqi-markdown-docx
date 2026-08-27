@@ -9,3 +9,7 @@ tests/output/
 .DS_Store
 dist/
 .vitest/
+.vercel-docx-api-key.txt
+.vercel-cron-secret.txt
+api/*.js
+.env*

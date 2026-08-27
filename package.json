@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build": "tsc --noEmit",
+    "build": "node scripts/bundle-api.mjs",
     "dev": "vercel dev",
     "sample": "tsx scripts/generate-sample.ts"
   },
@@ -27,6 +27,7 @@
     "@vercel/node": "^5.1.7",
     "jszip": "^3.10.1",
     "tsx": "^4.19.2",
+    "esbuild": "^0.25.9",
     "typescript": "^5.7.2",
     "vitest": "^3.0.5",
     "yaml": "^2.7.0"

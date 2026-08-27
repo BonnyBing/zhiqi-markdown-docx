@@ -5,8 +5,8 @@ info:
     将已确认的完整 Markdown 教案转换为原生 Word 文档。支持 Word 标题、列表、原生表格和公网图片嵌入，成功时返回真实 DOCX 下载链接。本工具不负责生成或改写教案内容，不得在转换失败时虚构下载链接。
   version: 1.0.0
 servers:
-  - url: https://YOUR_PROJECT.vercel.app
-    description: 部署完成后把这里换成实际的 Vercel 域名
+  - url: https://zhiqi-markdown-docx.vercel.app
+    description: 生产环境
 tags:
   - name: word
     description: Markdown 转 DOCX
