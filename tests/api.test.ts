@@ -58,6 +58,50 @@ describe('POST /api/generate-docx', () => {
     expect(body.word_url).toBe('');
   });
 
+  it('接受 Authorization Bearer', async () => {
+    const req = mockRequest({
+      headers: {
+        'content-type': 'application/json',
+        authorization: 'Bearer test-api-key',
+      },
+      body: { markdown: '   ', filename: '教案' },
+    });
+    const res = mockResponse();
+    await handleGenerateDocx(req, res);
+    expect(res.statusCode).toBe(400);
+    expect((res.body as GenerateDocxResponse).word_message).toContain('markdown');
+  });
+
+  it('接受智启 Basic（密钥放在用户名、密码为空）', async () => {
+    const encoded = Buffer.from('test-api-key:', 'utf8').toString('base64');
+    const req = mockRequest({
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Basic ${encoded}`,
+      },
+      body: { markdown: '   ', filename: '教案' },
+    });
+    const res = mockResponse();
+    await handleGenerateDocx(req, res);
+    expect(res.statusCode).toBe(400);
+    expect((res.body as GenerateDocxResponse).word_message).toContain('markdown');
+  });
+
+  it('接受智启 Basic（密钥放在密码、用户名为空）', async () => {
+    const encoded = Buffer.from(':test-api-key', 'utf8').toString('base64');
+    const req = mockRequest({
+      headers: {
+        'content-type': 'application/json',
+        authorization: `Basic ${encoded}`,
+      },
+      body: { markdown: '   ', filename: '教案' },
+    });
+    const res = mockResponse();
+    await handleGenerateDocx(req, res);
+    expect(res.statusCode).toBe(400);
+    expect((res.body as GenerateDocxResponse).word_message).toContain('markdown');
+  });
+
   it('错误 API 密钥返回 401', async () => {
     const req = mockRequest({
       headers: { 'content-type': 'application/json', 'x-api-key': 'wrong' },

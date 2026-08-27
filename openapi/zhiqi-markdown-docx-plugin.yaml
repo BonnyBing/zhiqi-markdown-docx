@@ -75,7 +75,7 @@ paths:
                 word_url: ''
                 word_filename: ''
                 word_size_bytes: 0
-                word_message: 缺少 x-api-key 请求头。
+                word_message: 缺少 API 密钥。请提供 x-api-key，或 Authorization Bearer/Basic。
                 warnings_text: ''
                 expires_at: ''
         '500':
@@ -99,7 +99,7 @@ components:
       type: apiKey
       in: header
       name: x-api-key
-      description: 在智启插件配置中填写的 DOCX_API_KEY
+      description: 在智启插件配置中填写的 DOCX_API_KEY。服务端同时接受 x-api-key、Authorization Bearer 和 Authorization Basic。
   schemas:
     GenerateDocxRequest:
       type: object

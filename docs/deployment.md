@@ -134,10 +134,12 @@ servers:
 
 ## 11. 在智启中配置 x-api-key
 
-1. 插件鉴权类型选择 API Key。
-2. Header 名称填写 `x-api-key`（不要写成 Authorization，除非你改了服务端）。
-3. 密钥填写与 Vercel `DOCX_API_KEY` 完全相同的值。
-4. 不要把密钥写进工作流提示词或网页。
+1. 认证类型选择 API Key。
+2. Key 管理选择「均使用我的 Key」。
+3. Auth Type 优先选 **Custom**；若出现请求头名称，填写 `x-api-key`。没有该输入框时选 **Bearer**。`Basic` 也可以，但不要截断密钥。
+4. API key 必须与 Vercel `DOCX_API_KEY` 完全一致（64 位十六进制，不要少末尾几位）。
+5. 不要把密钥写进工作流提示词或网页。
+6. 服务端同时接受 `x-api-key`、`Authorization: Bearer` 和 `Authorization: Basic`。
 
 数据提取建议读取顶层字段：`code`、`word_status`、`word_url`、`word_filename`、`word_size_bytes`、`word_message`、`warnings_text`、`expires_at`。
 

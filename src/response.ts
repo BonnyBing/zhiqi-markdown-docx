@@ -43,7 +43,7 @@ export const applyCors = (req: HttpRequestLike, res: HttpResponseLike): void => 
   if (origin && allowedOrigins.includes(origin.toLowerCase())) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
     res.setHeader('Access-Control-Max-Age', '600');
   }
 };

@@ -1,5 +1,4 @@
 api/*.js
-src/**/*.js
 .env
 .env.local
 .env*.local

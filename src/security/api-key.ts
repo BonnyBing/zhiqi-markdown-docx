@@ -23,7 +23,51 @@ export type ApiKeyResult =
   | { readonly ok: false; readonly code: 401 | 500; readonly message: string };
 
 /**
- * 校验转换接口的 x-api-key。
+ * 读取调用方可能提供的 API 密钥。
+ * 兼容 OpenAPI 的 `x-api-key`，以及智启插件鉴权里的 Bearer / Basic。
+ * Basic 会同时尝试用户名和密码，避免智启把密钥放在其中一侧。
+ */
+export const readProvidedApiKeys = (req: HttpRequestLike): readonly string[] => {
+  const keys: string[] = [];
+  const push = (value: string): void => {
+    const trimmed = value.trim();
+    if (trimmed.length > 0 && !keys.includes(trimmed)) keys.push(trimmed);
+  };
+
+  push(readHeader(req, 'x-api-key'));
+
+  const authorization = readHeader(req, 'authorization').trim();
+  if (!authorization) return keys;
+
+  const space = authorization.indexOf(' ');
+  const scheme = (space === -1 ? authorization : authorization.slice(0, space)).toLowerCase();
+  const credential = (space === -1 ? '' : authorization.slice(space + 1)).trim();
+
+  if (scheme === 'bearer') {
+    push(credential);
+    return keys;
+  }
+  if (scheme === 'basic') {
+    for (const part of decodeBasicCredential(credential)) push(part);
+  }
+  return keys;
+};
+
+const decodeBasicCredential = (credential: string): readonly string[] => {
+  try {
+    const decoded = Buffer.from(credential, 'base64').toString('utf8');
+    const colon = decoded.indexOf(':');
+    if (colon === -1) return decoded.trim() ? [decoded.trim()] : [];
+    const username = decoded.slice(0, colon).trim();
+    const password = decoded.slice(colon + 1).trim();
+    return [username, password].filter((item) => item.length > 0);
+  } catch {
+    return [];
+  }
+};
+
+/**
+ * 校验转换接口密钥。
  * 服务端未配置密钥时拒绝全部请求（500），避免接口在未设防状态下对外可用。
  */
 export const verifyApiKey = (req: HttpRequestLike): ApiKeyResult => {
@@ -36,12 +80,12 @@ export const verifyApiKey = (req: HttpRequestLike): ApiKeyResult => {
     };
   }
 
-  const provided = readHeader(req, 'x-api-key').trim();
-  if (!provided) {
-    return { ok: false, code: 401, message: '缺少 x-api-key 请求头。' };
+  const provided = readProvidedApiKeys(req);
+  if (provided.length === 0) {
+    return { ok: false, code: 401, message: '缺少 API 密钥。请提供 x-api-key，或 Authorization Bearer/Basic。' };
   }
-  if (!secretsEqual(provided, apiKey)) {
-    return { ok: false, code: 401, message: 'x-api-key 无效。' };
+  if (!provided.some((item) => secretsEqual(item, apiKey))) {
+    return { ok: false, code: 401, message: 'API 密钥无效。' };
   }
   return { ok: true };
 };

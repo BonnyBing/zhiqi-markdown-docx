@@ -61,7 +61,7 @@ tests/fixtures/graph.png
 
 ### `POST /api/generate-docx`
 
-请求头：`Content-Type: application/json`，`x-api-key: <DOCX_API_KEY>`。
+请求头：`Content-Type: application/json`，以及下列之一：`x-api-key: <DOCX_API_KEY>`、`Authorization: Bearer <DOCX_API_KEY>`、`Authorization: Basic`（密钥可放在用户名或密码）。
 
 ```json
 {
@@ -111,7 +111,7 @@ OpenAPI 文件：
 openapi/zhiqi-markdown-docx-plugin.yaml
 ```
 
-部署后把 `servers.url` 换成真实 Vercel 域名，再导入智启。插件鉴权请求头为 `x-api-key`。
+部署后把 `servers.url` 换成真实 Vercel 域名，再导入智启。插件认证选 API Key、均使用我的 Key；Auth Type 用 Bearer 或 Custom（`x-api-key`），Basic 也可以。API key 必须与 Vercel `DOCX_API_KEY` 完全一致（64 位十六进制）。
 
 ## 隐私
 
