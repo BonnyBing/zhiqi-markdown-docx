@@ -58,7 +58,7 @@ GitHub 只保存源代码。不要提交 `.env`、真实 API 密钥或 Blob Toke
 | `PUBLIC_BASE_URL` | 否 | 部署后的站点根 URL，例如 `https://your-project.vercel.app` |
 | `CRON_SECRET` | 清理需要 | 手动或 Cron 调用 `/api/cleanup-docx` 时使用。Vercel Cron 会自动带 `Authorization: Bearer <CRON_SECRET>` |
 | `CLEANUP_ENABLED` | 否 | 只有确认 Cron 确实在跑时才设为 `true`。否则成功响应的 `expires_at` 必须为空 |
-| `ALLOWED_ORIGINS` | 否 | 浏览器 CORS 白名单。智启服务端调用不依赖 CORS，默认留空 |
+| `ALLOWED_ORIGINS` | 否 | 浏览器 CORS 白名单。留空表示允许任意来源，供智启插件「试运行」跨域调用 |
 
 生产、预览环境都要配置。不要把真实值写进 `openapi` 或网页。
 

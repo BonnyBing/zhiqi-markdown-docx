@@ -223,15 +223,16 @@ describe('GET /api/health', () => {
 });
 
 describe('OPTIONS 预检', () => {
-  it('未配置来源时不回放任意 Origin', async () => {
+  it('未配置白名单时允许智启浏览器试运行跨域', async () => {
     const req = mockRequest({
       method: 'OPTIONS',
-      headers: { origin: 'https://evil.example' },
+      headers: { origin: 'https://www.zhiqi.com' },
     });
     const res = mockResponse();
     await handleGenerateDocx(req, res);
     expect(res.statusCode).toBe(204);
-    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    expect(res.headers['access-control-allow-origin']).toBe('https://www.zhiqi.com');
+    expect(res.headers['access-control-allow-headers']).toMatch(/Authorization/i);
   });
 });
 

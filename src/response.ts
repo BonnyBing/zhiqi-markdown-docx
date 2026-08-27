@@ -31,21 +31,26 @@ export const readHeader = (req: HttpRequestLike, name: string): string => {
 };
 
 /**
- * 按配置的白名单下发 CORS 头。
- * 未配置 ALLOWED_ORIGINS 时不下发任何允许头——智启是服务端调用，不依赖浏览器 CORS。
+ * 下发 CORS 头。
+ * 智启插件「试运行」在浏览器里跨域调用，默认允许任意 Origin；
+ * 若配置了 ALLOWED_ORIGINS，则只回放白名单中的来源。
  */
 export const applyCors = (req: HttpRequestLike, res: HttpResponseLike): void => {
   const { allowedOrigins } = getConfig();
   res.setHeader('Vary', 'Origin');
-  if (allowedOrigins.length === 0) return;
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
 
   const origin = readHeader(req, 'origin');
-  if (origin && allowedOrigins.includes(origin.toLowerCase())) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, Authorization');
-    res.setHeader('Access-Control-Max-Age', '600');
+  if (allowedOrigins.length > 0) {
+    if (origin && allowedOrigins.includes(origin.toLowerCase())) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    return;
   }
+
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
 };
 
 /** 处理预检请求；返回 true 表示请求已被响应，调用方应直接 return。 */
