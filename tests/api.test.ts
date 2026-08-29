@@ -16,10 +16,10 @@ const lessonPlan = readFileSync(
   'utf8',
 );
 
-const httpsUrl = 'https://test.public.blob.vercel-storage.com/docx/2026/08/uuid-demo.docx';
+const httpsUrl = 'https://test.public.blob.vercel-storage.com/af99592f-8f8c-4b0f-b795-a2867c614188.docx';
 
 const successStore = (): BlobStore => ({
-  putDocx: async () => ({ url: httpsUrl, pathname: 'docx/2026/08/uuid-demo.docx' }),
+  putDocx: async () => ({ url: httpsUrl, pathname: 'af99592f-8f8c-4b0f-b795-a2867c614188.docx' }),
   listDocx: async () => [],
   delete: async () => undefined,
 });
@@ -177,6 +177,35 @@ describe('generateDocx 成功与上传失败', () => {
     );
     expect(result.word_size_bytes).toBeGreaterThan(0);
     expect(result.expires_at).toBe('');
+  });
+
+  it('上传路径只用 UUID，不含中文文件名', async () => {
+    let uploadedPath = '';
+    const capturingStore: BlobStore = {
+      putDocx: async (pathname) => {
+        uploadedPath = pathname;
+        return {
+          url: `https://test.public.blob.vercel-storage.com/${pathname}`,
+          pathname,
+        };
+      },
+      listDocx: async () => [],
+      delete: async () => undefined,
+    };
+    const chineseName = '三年级数学-乘除法的应用二-科学跨学科教案';
+    const result = await generateDocx(
+      { markdown: '# 标题\n\n正文', filename: chineseName },
+      { blobStore: capturingStore, fetch: mockImageFetch },
+    );
+    expect(result.code).toBe(200);
+    expect(result.word_filename).toBe(`${chineseName}.docx`);
+    expect(uploadedPath).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.docx$/i,
+    );
+    expect(uploadedPath).not.toMatch(/docx\//);
+    expect(uploadedPath).not.toMatch(/[\u4e00-\u9fff]/);
+    expect(result.word_url).not.toContain('%E');
+    expect(result.word_url.length).toBeLessThan(120);
   });
 
   it('Blob 上传失败时 word_url 为空', async () => {

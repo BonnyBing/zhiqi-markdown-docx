@@ -10,6 +10,7 @@ describe('文件名清洗', () => {
     if (!result.ok) return;
     expect(result.downloadName).toBe('小学三年级数学-乘除法的应用（二）-科学跨学科教案.docx');
     expect(result.downloadName.match(/\.docx$/i)).toHaveLength(1);
+    expect(result.baseName).toBe('小学三年级数学-乘除法的应用（二）-科学跨学科教案');
   });
 
   it('非法字符被安全清洗为 -', () => {

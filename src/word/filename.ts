@@ -1,11 +1,10 @@
 /**
  * 文件名清洗。
  *
- * 两个产物：
- * - `downloadName`：返回给智启与教师的文件名，保留中文，末尾只有一个 .docx
- * - `blobSafeName`：写入 Blob 路径的文件名，额外去掉对 URL 不友好的字符
+ * `downloadName` 返回给智启与教师，保留中文，末尾只有一个 .docx。
+ * Blob 存储路径由服务端用 UUID 生成，不使用这份中文文件名，以免下载链接过长。
  *
- * 客户端永远不能指定 Blob 路径，只能影响文件名部分。
+ * 客户端永远不能指定 Blob 路径，只能影响 word_filename。
  */
 
 import { MAX_FILENAME_CHARS } from '../config';
@@ -13,8 +12,6 @@ import { MAX_FILENAME_CHARS } from '../config';
 /** Windows / OOXML 禁止出现在文件名中的字符，以及换行与控制字符。 */
 // eslint-disable-next-line no-control-regex
 const FORBIDDEN_CHARS = /[/\\:*?"<>|\u0000-\u001f\u007f]/g;
-/** 对 URL 路径不友好的字符（会引起 Blob 路径歧义或二次编码问题）。 */
-const URL_UNSAFE_CHARS = /[#%&+?\s]+/g;
 
 export type FilenameResult =
   | {
@@ -23,8 +20,6 @@ export type FilenameResult =
       readonly downloadName: string;
       /** 不含扩展名的清洗结果。 */
       readonly baseName: string;
-      /** 适合放进 Blob 路径的文件名（含 .docx）。 */
-      readonly blobSafeName: string;
       /** 清洗过程中的提示信息。 */
       readonly warnings: readonly string[];
     }
@@ -89,14 +84,10 @@ export const sanitizeFilename = (rawInput: unknown): FilenameResult => {
     return { ok: false, error: 'filename 清洗后为空，请提供有效的文件名。' };
   }
 
-  const blobBase = base.replace(URL_UNSAFE_CHARS, '-').replace(/-{2,}/g, '-');
-  const safeBlobBase = blobBase.replace(/^-+|-+$/g, '') || 'document';
-
   return {
     ok: true,
     downloadName: `${base}.docx`,
     baseName: base,
-    blobSafeName: `${safeBlobBase}.docx`,
     warnings,
   };
 };

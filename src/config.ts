@@ -24,7 +24,7 @@ export const IMAGE_TIMEOUT_MS = 10000;
 /** 图片下载允许的最大重定向次数。 */
 export const MAX_IMAGE_REDIRECTS = 3;
 
-/** Blob 中存放 DOCX 的路径前缀。 */
+/** 旧版 Blob 路径前缀；新文件不再使用，清理时仍会扫到这些对象。 */
 export const BLOB_PREFIX = 'docx';
 /** DOCX 的 MIME 类型。 */
 export const DOCX_CONTENT_TYPE =

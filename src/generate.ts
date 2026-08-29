@@ -81,7 +81,7 @@ export const generateDocx = async (
 
   const store = deps.blobStore ?? createVercelBlobStore();
   try {
-    const uploaded = await uploadDocx(store, buffer, filename.blobSafeName);
+    const uploaded = await uploadDocx(store, buffer);
     if (!uploaded.url.startsWith('https://')) {
       return buildError(500, '存储返回的地址不是 HTTPS，已拒绝作为下载链接。', warnings);
     }

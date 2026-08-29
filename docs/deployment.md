@@ -41,7 +41,8 @@ GitHub 只保存源代码。不要提交 `.env`、真实 API 密钥或 Blob Toke
 
 - 上传时使用 `access: "public"`。
 - 得到 `word_url` 的任何人都可以下载，无需登录。
-- 链接不可猜测（路径含 UUID），但这不是访问控制。
+- 链接不可猜测（路径仅为 `UUID.docx`），但这不是访问控制。
+- 中文教案名通过响应字段 `word_filename` 返回，不写入下载 URL。
 - **不要**用本服务保存含学生姓名、学号、成绩、家庭信息的文档。
 
 ## 5. 配置环境变量
@@ -167,7 +168,7 @@ Hobby 或开发环境请使用下一节的人工清理，且保持 `CLEANUP_ENAB
 ## 13. 查看和人工删除 Blob 文件
 
 1. Vercel Dashboard → Storage → 对应 Blob store → Browse。
-2. 前缀为 `docx/`。
+2. 新文件在根目录，文件名为 `UUID.docx`；部署前生成的文件仍在 `docx/` 下。
 3. 可在控制台单条删除。
 
 手动调用清理接口（会删除超过 `FILE_RETENTION_HOURS` 的对象）：

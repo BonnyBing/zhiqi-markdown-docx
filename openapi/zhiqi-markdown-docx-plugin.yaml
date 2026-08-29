@@ -42,7 +42,7 @@ paths:
               example:
                 code: 200
                 word_status: success
-                word_url: https://xxx.public.blob.vercel-storage.com/docx/2026/08/uuid-教案.docx
+                word_url: https://xxx.public.blob.vercel-storage.com/af99592f-8f8c-4b0f-b795-a2867c614188.docx
                 word_filename: 小学三年级数学-乘除法的应用（二）-科学跨学科教案.docx
                 word_size_bytes: 123456
                 word_message: ''
@@ -140,10 +140,10 @@ components:
           description: 只能是 success 或 error。任何非 200 结果都必须是 error。
         word_url:
           type: string
-          description: 成功时为 Vercel Blob 的 HTTPS 下载地址；失败时必须为空字符串，禁止占位链接。
+          description: 成功时为 Vercel Blob 的短 ASCII HTTPS 下载地址（仅 UUID.docx，不含目录或中文文件名）；失败时必须为空字符串，禁止占位链接。
         word_filename:
           type: string
-          description: 成功时为清洗后的 .docx 文件名；失败时为空字符串。
+          description: 成功时为清洗后的中文 .docx 文件名，供展示和另存为；失败时为空字符串。
         word_size_bytes:
           type: integer
           description: 成功时为 DOCX 字节数；失败时为 0。

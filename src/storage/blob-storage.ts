@@ -1,7 +1,8 @@
 /**
  * Vercel Blob 存储。
  *
- * 路径由服务端生成（年份/月份/UUID + 安全文件名），不接受客户端指定路径。
+ * 路径由服务端生成（仅 UUID.docx），不接受客户端指定路径。
+ * 中文文件名只出现在 API 的 word_filename 中，不写入 Blob 路径。
  * 上传使用 public 访问、禁止覆盖；失败时不得对外声称成功。
  */
 
@@ -32,13 +33,15 @@ export type BlobStore = {
   delete(url: string): Promise<void>;
 };
 
-const pad2 = (value: number): string => String(value).padStart(2, '0');
+const UUID_DOCX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.docx$/i;
 
-export const buildBlobPathname = (blobSafeName: string, now: Date = new Date()): string => {
-  const year = now.getUTCFullYear();
-  const month = pad2(now.getUTCMonth() + 1);
-  return `${BLOB_PREFIX}/${year}/${month}/${randomUUID()}-${blobSafeName}`;
-};
+/** 本服务管理的对象：新路径为 {uuid}.docx，旧路径以 docx/ 开头。 */
+export const isManagedDocxPath = (pathname: string): boolean =>
+  UUID_DOCX.test(pathname) || pathname.startsWith(`${BLOB_PREFIX}/`);
+
+/** Blob 路径只含 ASCII：{uuid}.docx */
+export const buildBlobPathname = (): string => `${randomUUID()}.docx`;
 
 const requireToken = (): string => {
   const { blobToken, hasBlobToken } = getConfig();
@@ -70,12 +73,12 @@ export const createVercelBlobStore = (): BlobStore => ({
     let cursor: string | undefined;
     do {
       const page = await list({
-        prefix: `${BLOB_PREFIX}/`,
         token,
         cursor,
         limit: 1000,
       });
       for (const blob of page.blobs) {
+        if (!isManagedDocxPath(blob.pathname)) continue;
         blobs.push({
           url: blob.url,
           pathname: blob.pathname,
@@ -96,9 +99,8 @@ export const createVercelBlobStore = (): BlobStore => ({
 export const uploadDocx = async (
   store: BlobStore,
   body: Buffer,
-  blobSafeName: string,
 ): Promise<UploadedBlob> => {
-  const pathname = buildBlobPathname(blobSafeName);
+  const pathname = buildBlobPathname();
   try {
     return await store.putDocx(pathname, body);
   } catch (error) {
