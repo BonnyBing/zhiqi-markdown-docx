@@ -54,7 +54,7 @@ GitHub 只保存源代码。不要提交 `.env`、真实 API 密钥或 Blob Toke
 | `DOCX_API_KEY` | 是 | 智启插件调用转换接口时使用的密钥，自行生成长随机串 |
 | `BLOB_READ_WRITE_TOKEN` | 是 | Blob store 的读写令牌 |
 | `MAX_MARKDOWN_BYTES` | 否 | 默认 `122880`（120KB） |
-| `ALLOWED_IMAGE_HOSTS` | 建议 | 逗号分隔，例如 `rdfx-grade3-kg-deploy.vercel.app,bonnybing.github.io`。配置后只允许这些域名 |
+| `ALLOWED_IMAGE_HOSTS` | 已停用 | 留空即可。任意公网 HTTPS 图片都会尝试嵌入，不再按域名限制。仍拒绝内网、localhost 和非 HTTPS |
 | `FILE_RETENTION_HOURS` | 否 | 默认 `72` |
 | `PUBLIC_BASE_URL` | 否 | 部署后的站点根 URL，例如 `https://your-project.vercel.app` |
 | `CRON_SECRET` | 清理需要 | 手动或 Cron 调用 `/api/cleanup-docx` 时使用。Vercel Cron 会自动带 `Authorization: Bearer <CRON_SECRET>` |

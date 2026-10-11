@@ -52,7 +52,10 @@ export type RuntimeConfig = {
   readonly hasBlobToken: boolean;
   readonly blobToken: string;
   readonly maxMarkdownBytes: number;
-  /** 图片域名白名单（小写）。空数组表示不限制域名。 */
+  /**
+   * 历史环境变量 ALLOWED_IMAGE_HOSTS 的解析结果。
+   * 已不再用于拒绝图片，任意公网 HTTPS 地址都会尝试嵌入。
+   */
   readonly allowedImageHosts: readonly string[];
   readonly fileRetentionHours: number;
   readonly publicBaseUrl: string;

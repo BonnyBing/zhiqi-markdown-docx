@@ -40,9 +40,12 @@ describe('图片 URL 安全校验', () => {
     expect(checkImageUrlShape('https://[::1]/a.png').ok).toBe(false);
   });
 
-  it('白名单开启时拒绝名单外域名', () => {
-    const result = checkImageUrlShape('https://evil.example/a.png', allowlist);
-    expect(result.ok).toBe(false);
+  it('任意公网 HTTPS 域名都可以嵌入，不再看白名单', () => {
+    expect(checkImageUrlShape('https://evil.example/a.png', allowlist).ok).toBe(true);
+    expect(
+      checkImageUrlShape('https://abc123.public.blob.vercel-storage.com/img/a.png', allowlist).ok,
+    ).toBe(true);
+    expect(checkImageUrlShape('https://i.ibb.co/abc/photo.png').ok).toBe(true);
   });
 });
 

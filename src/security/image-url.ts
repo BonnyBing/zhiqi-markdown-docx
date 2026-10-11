@@ -1,15 +1,13 @@
 /**
  * 图片 URL 安全校验（防 SSRF）。
  *
- * 只允许 HTTPS；拒绝 localhost、私有网段、链路本地、云元数据地址，
- * 以及 file / data / javascript 等协议。若配置了 ALLOWED_IMAGE_HOSTS，
- * 则最终跳转地址也必须落在白名单内。
+ * 任意公网 HTTPS 图片都可以嵌入，不再按域名白名单限制。
+ * 仍拒绝 localhost、私有网段、链路本地、云元数据地址，
+ * 以及 file / data / javascript 等协议。
  */
 
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
-
-import { getConfig } from '../config';
 
 const BLOCKED_HOSTS = new Set([
   'localhost',
@@ -79,15 +77,6 @@ export const isPrivateOrDisallowedIp = (ip: string): boolean => {
   return true;
 };
 
-export const hostMatchesAllowlist = (
-  hostname: string,
-  allowlist: readonly string[],
-): boolean => {
-  if (allowlist.length === 0) return true;
-  const host = hostname.replace(/\.$/, '').toLowerCase();
-  return allowlist.some((allowed) => host === allowed || host.endsWith(`.${allowed}`));
-};
-
 const isBlockedHostname = (hostname: string): boolean => {
   const host = stripIpv6Brackets(hostname).replace(/\.$/, '').toLowerCase();
   if (!host) return true;
@@ -99,12 +88,14 @@ const isBlockedHostname = (hostname: string): boolean => {
 };
 
 /**
- * 同步检查 URL 形态（协议、主机名、白名单、明文私有 IP）。
- * DNS 解析在 `assertSafeImageUrl` 中进行。
+ * 同步检查 URL 形态（协议、主机名、明文私有 IP）。
+ * 不按域名白名单拒绝。DNS 解析在 `assertSafeImageUrl` 中进行。
+ *
+ * `allowlist` 仅保留给旧调用方，已不再参与校验。
  */
 export const checkImageUrlShape = (
   raw: string,
-  allowlist: readonly string[] = getConfig().allowedImageHosts,
+  _allowlist?: readonly string[],
 ): UrlCheckResult => {
   const trimmed = raw.trim();
   if (!trimmed) return { ok: false, reason: '图片地址为空。' };
@@ -133,10 +124,6 @@ export const checkImageUrlShape = (
     return { ok: false, reason: '拒绝访问本地、内网或元数据地址。' };
   }
 
-  if (!hostMatchesAllowlist(hostname, allowlist)) {
-    return { ok: false, reason: '图片域名不在允许列表中。' };
-  }
-
   return { ok: true, url: parsed };
 };
 
@@ -145,7 +132,7 @@ export const checkImageUrlShape = (
  */
 export const assertSafeImageUrl = async (
   raw: string,
-  allowlist: readonly string[] = getConfig().allowedImageHosts,
+  allowlist?: readonly string[],
 ): Promise<UrlCheckResult> => {
   const shape = checkImageUrlShape(raw, allowlist);
   if (!shape.ok) return shape;

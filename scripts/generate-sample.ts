@@ -8,8 +8,6 @@ import { mockImageFetch, writeGraphFixture } from '../tests/helpers/images';
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 const main = async (): Promise<void> => {
-  process.env.ALLOWED_IMAGE_HOSTS ||=
-    'rdfx-grade3-kg-deploy.vercel.app,bonnybing.github.io';
   await writeGraphFixture();
   const markdown = await readFile(join(root, 'tests/fixtures/lesson-plan.md'), 'utf8');
   const { buffer, warnings } = await generateDocxBuffer(

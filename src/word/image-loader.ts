@@ -1,7 +1,8 @@
 /**
  * 下载公网图片并校验类型、尺寸，供 Word ImageRun 嵌入。
  *
- * 生产路径只走 HTTPS；测试可通过注入 fetch 返回本地夹具，绝不开启 file: 协议。
+ * 任意公网 HTTPS 地址都会尝试下载，不再按域名白名单限制。
+ * 测试可通过注入 fetch 返回本地夹具，绝不开启 file: 协议。
  */
 
 import { imageSize } from 'image-size';
