@@ -24,10 +24,11 @@ export const handleHealth = (req: HttpRequestLike, res: HttpResponseLike): void 
     return;
   }
 
+  const cfg = getConfig();
   const body: HealthResponse = {
     status: 'ok',
     service: SERVICE_NAME,
-    storage_configured: getConfig().hasBlobToken,
+    storage_configured: cfg.storageBackend !== 'none',
     version: SERVICE_VERSION,
   };
   sendJson(res, 200, body);

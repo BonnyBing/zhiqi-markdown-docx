@@ -2,7 +2,7 @@
   "name": "zhiqi-markdown-docx",
   "version": "1.0.0",
   "private": true,
-  "description": "智启插件用 Markdown 转 Word(DOCX) 服务，部署于 Vercel，文件保存在 Vercel Blob。",
+  "description": "智启插件用 Markdown 转 Word(DOCX) 服务；支持 Vercel Blob 或本机目录（Docker）。",
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -13,20 +13,21 @@
     "test:watch": "vitest",
     "build": "node scripts/bundle-api.mjs",
     "dev": "vercel dev",
+    "start": "tsx scripts/server.ts",
     "sample": "tsx scripts/generate-sample.ts"
   },
   "dependencies": {
     "@vercel/blob": "^2.0.0",
     "docx": "^9.5.1",
     "image-size": "^2.0.2",
-    "markdown-it": "^14.1.0"
+    "markdown-it": "^14.1.0",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.10.2",
     "@vercel/node": "^5.1.7",
     "jszip": "^3.10.1",
-    "tsx": "^4.19.2",
     "esbuild": "^0.25.9",
     "typescript": "^5.7.2",
     "vitest": "^3.0.5",

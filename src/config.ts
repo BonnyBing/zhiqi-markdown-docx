@@ -45,18 +45,35 @@ const parseCsv = (raw: string | undefined): string[] => {
     .filter((item) => item.length > 0);
 };
 
+/** 存储后端：本机目录（Docker/自建）或 Vercel Blob。 */
+export type StorageBackend = 'local' | 'vercel_blob' | 'none';
+
 export type RuntimeConfig = {
   /** 转换接口要求的 API 密钥；未配置时接口拒绝所有请求。 */
   readonly apiKey: string;
   /** Vercel Blob 读写令牌是否已配置。 */
   readonly hasBlobToken: boolean;
   readonly blobToken: string;
+  /**
+   * 本机落盘目录（Docker volume）。设置后优先于 Vercel Blob。
+   * 例如 /data/word-files
+   */
+  readonly localStorageDir: string;
+  readonly hasLocalStorage: boolean;
+  /** 实际选用的存储后端。 */
+  readonly storageBackend: StorageBackend;
   readonly maxMarkdownBytes: number;
   /**
    * 历史环境变量 ALLOWED_IMAGE_HOSTS 的解析结果。
    * 已不再用于拒绝图片，任意公网 HTTPS 地址都会尝试嵌入。
    */
   readonly allowedImageHosts: readonly string[];
+  /**
+   * 公司内网可信任的图片主机（主机名或 IP，不含端口）。
+   * 对这些主机允许 http/https，并放行私网地址（供嵌入同机知识图谱图）。
+   * 例：TRUSTED_IMAGE_HOSTS=10.20.0.34
+   */
+  readonly trustedImageHosts: readonly string[];
   readonly fileRetentionHours: number;
   readonly publicBaseUrl: string;
   readonly cronSecret: string;
@@ -65,15 +82,34 @@ export type RuntimeConfig = {
   readonly allowedOrigins: readonly string[];
 };
 
-export const getConfig = (env: NodeJS.ProcessEnv = process.env): RuntimeConfig => ({
-  apiKey: (env.DOCX_API_KEY ?? '').trim(),
-  hasBlobToken: (env.BLOB_READ_WRITE_TOKEN ?? '').trim().length > 0,
-  blobToken: (env.BLOB_READ_WRITE_TOKEN ?? '').trim(),
-  maxMarkdownBytes: parsePositiveInt(env.MAX_MARKDOWN_BYTES, DEFAULT_MAX_MARKDOWN_BYTES),
-  allowedImageHosts: parseCsv(env.ALLOWED_IMAGE_HOSTS),
-  fileRetentionHours: parsePositiveInt(env.FILE_RETENTION_HOURS, 72),
-  publicBaseUrl: (env.PUBLIC_BASE_URL ?? '').trim(),
-  cronSecret: (env.CRON_SECRET ?? '').trim(),
-  cleanupEnabled: (env.CLEANUP_ENABLED ?? '').trim().toLowerCase() === 'true',
-  allowedOrigins: parseCsv(env.ALLOWED_ORIGINS),
-});
+const resolveStorageBackend = (
+  hasLocal: boolean,
+  hasBlob: boolean,
+): StorageBackend => {
+  if (hasLocal) return 'local';
+  if (hasBlob) return 'vercel_blob';
+  return 'none';
+};
+
+export const getConfig = (env: NodeJS.ProcessEnv = process.env): RuntimeConfig => {
+  const localStorageDir = (env.LOCAL_STORAGE_DIR ?? '').trim();
+  const hasLocalStorage = localStorageDir.length > 0;
+  const blobToken = (env.BLOB_READ_WRITE_TOKEN ?? '').trim();
+  const hasBlobToken = blobToken.length > 0;
+  return {
+    apiKey: (env.DOCX_API_KEY ?? '').trim(),
+    hasBlobToken,
+    blobToken,
+    localStorageDir,
+    hasLocalStorage,
+    storageBackend: resolveStorageBackend(hasLocalStorage, hasBlobToken),
+    maxMarkdownBytes: parsePositiveInt(env.MAX_MARKDOWN_BYTES, DEFAULT_MAX_MARKDOWN_BYTES),
+    allowedImageHosts: parseCsv(env.ALLOWED_IMAGE_HOSTS),
+    trustedImageHosts: parseCsv(env.TRUSTED_IMAGE_HOSTS),
+    fileRetentionHours: parsePositiveInt(env.FILE_RETENTION_HOURS, 72),
+    publicBaseUrl: (env.PUBLIC_BASE_URL ?? '').trim(),
+    cronSecret: (env.CRON_SECRET ?? '').trim(),
+    cleanupEnabled: (env.CLEANUP_ENABLED ?? '').trim().toLowerCase() === 'true',
+    allowedOrigins: parseCsv(env.ALLOWED_ORIGINS),
+  };
+};

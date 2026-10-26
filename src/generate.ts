@@ -10,11 +10,8 @@ import { logEvent, safeErrorMessage } from './log';
 import { parseMarkdown } from './markdown/parser';
 import { buildError, buildSuccess, joinWarnings } from './response';
 import { checkMarkdown } from './security/request-limits';
-import {
-  createVercelBlobStore,
-  uploadDocx,
-  type BlobStore,
-} from './storage/blob-storage';
+import { uploadDocx, type BlobStore } from './storage/blob-storage';
+import { createDefaultStore } from './storage/store';
 import type { GenerateDocxResponse } from './types';
 import { sanitizeFilename } from './word/filename';
 import { buildDocxBuffer } from './word/document-builder';
@@ -79,11 +76,12 @@ export const generateDocx = async (
     return buildError(500, 'Word 文档生成失败。', warnings);
   }
 
-  const store = deps.blobStore ?? createVercelBlobStore();
+  const store = deps.blobStore ?? createDefaultStore();
   try {
     const uploaded = await uploadDocx(store, buffer);
-    if (!uploaded.url.startsWith('https://')) {
-      return buildError(500, '存储返回的地址不是 HTTPS，已拒绝作为下载链接。', warnings);
+    // 公司内网可用 http://；公网仍建议 https://
+    if (!uploaded.url.startsWith('https://') && !uploaded.url.startsWith('http://')) {
+      return buildError(500, '存储返回的地址不是有效的 HTTP(S) 下载链接。', warnings);
     }
     return buildSuccess({
       wordUrl: uploaded.url,

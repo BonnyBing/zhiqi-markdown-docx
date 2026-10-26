@@ -47,6 +47,13 @@ describe('图片 URL 安全校验', () => {
     ).toBe(true);
     expect(checkImageUrlShape('https://i.ibb.co/abc/photo.png').ok).toBe(true);
   });
+
+  it('TRUSTED_IMAGE_HOSTS 允许内网 http 图片', () => {
+    process.env.TRUSTED_IMAGE_HOSTS = '10.20.0.34';
+    expect(checkImageUrlShape('http://10.20.0.34:8099/i/s/img1.png').ok).toBe(true);
+    expect(checkImageUrlShape('http://10.20.0.99:8099/i/s/img1.png').ok).toBe(false);
+    delete process.env.TRUSTED_IMAGE_HOSTS;
+  });
 });
 
 describe('图片嵌入', () => {

@@ -4,10 +4,14 @@
  * 任意公网 HTTPS 图片都可以嵌入，不再按域名白名单限制。
  * 仍拒绝 localhost、私有网段、链路本地、云元数据地址，
  * 以及 file / data / javascript 等协议。
+ *
+ * 例外：TRUSTED_IMAGE_HOSTS 中的主机（公司内网知识图谱等）允许 http/https 与私网 IP。
  */
 
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
+
+import { getConfig } from '../config';
 
 const BLOCKED_HOSTS = new Set([
   'localhost',
@@ -93,6 +97,13 @@ const isBlockedHostname = (hostname: string): boolean => {
  *
  * `allowlist` 仅保留给旧调用方，已不再参与校验。
  */
+const isTrustedImageHost = (hostname: string): boolean => {
+  const host = stripIpv6Brackets(hostname).replace(/\.$/, '').toLowerCase();
+  if (!host) return false;
+  const trusted = getConfig().trustedImageHosts;
+  return trusted.some((item) => item === host);
+};
+
 export const checkImageUrlShape = (
   raw: string,
   _allowlist?: readonly string[],
@@ -111,7 +122,9 @@ export const checkImageUrlShape = (
   if (protocol === 'file:' || protocol === 'data:' || protocol === 'javascript:' || protocol === 'vbscript:') {
     return { ok: false, reason: `不允许使用 ${protocol} 协议下载图片。` };
   }
-  if (protocol !== 'https:') {
+
+  const trusted = isTrustedImageHost(parsed.hostname);
+  if (protocol !== 'https:' && !(trusted && protocol === 'http:')) {
     return { ok: false, reason: '只允许通过 HTTPS 下载图片。' };
   }
 
@@ -120,7 +133,7 @@ export const checkImageUrlShape = (
   }
 
   const hostname = parsed.hostname;
-  if (isBlockedHostname(hostname)) {
+  if (!trusted && isBlockedHostname(hostname)) {
     return { ok: false, reason: '拒绝访问本地、内网或元数据地址。' };
   }
 
@@ -138,6 +151,8 @@ export const assertSafeImageUrl = async (
   if (!shape.ok) return shape;
 
   const host = stripIpv6Brackets(shape.url.hostname);
+  if (isTrustedImageHost(host)) return shape;
+
   if (isIP(host)) {
     if (isPrivateOrDisallowedIp(host)) {
       return { ok: false, reason: '拒绝访问本地、内网或元数据地址。' };

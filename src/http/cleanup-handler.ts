@@ -15,7 +15,8 @@ import {
   type HttpResponseLike,
 } from '../response';
 import { verifyCronSecret } from '../security/api-key';
-import { createVercelBlobStore, deleteExpiredDocx } from '../storage/blob-storage';
+import { deleteExpiredDocx } from '../storage/blob-storage';
+import { createDefaultStore } from '../storage/store';
 import type { CleanupResponse } from '../types';
 
 export const handleCleanupDocx = async (
@@ -53,7 +54,7 @@ export const handleCleanupDocx = async (
 
   const { fileRetentionHours } = getConfig();
   try {
-    const result = await deleteExpiredDocx(createVercelBlobStore(), fileRetentionHours);
+    const result = await deleteExpiredDocx(createDefaultStore(), fileRetentionHours);
     sendJson(res, 200, {
       code: 200,
       status: 'success',
